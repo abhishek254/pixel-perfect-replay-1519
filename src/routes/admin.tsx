@@ -9,6 +9,8 @@ export const Route = createFileRoute("/admin")({
       { property: "og:title", content: "Admin Login — 1.8" },
       { property: "og:description", content: "Administrator access for the 1.8 portfolio." },
       { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

@@ -26,7 +26,7 @@ export function Reveal({ children, className = "", delay = 0 }: { children: Reac
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <span className={`font-display text-2xl font-bold leading-none text-foreground ${className}`} aria-label="1.8">
+      <span className={`font-sans text-2xl font-semibold leading-none text-foreground ${className}`} aria-label="1.8">
       1<span className="text-brand-red">.</span>8
     </span>
   );
