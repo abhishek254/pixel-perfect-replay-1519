@@ -26,7 +26,7 @@ export async function resolveMedia<T extends { video_path: string | null; thumbn
       if (!path) return '';
       const { data, error } = await supabaseAdmin.storage.from('portfolio-media').createSignedUrl(path, 7200);
       if (error) throw new Error('Unable to load video media.');
-      const browserUrl = import.meta.env.VITE_SUPABASE_URL;
+      const browserUrl = import.meta.env['VITE_SUPABASE_URL'];
       const serverUrl = process.env['SUPABASE_URL'];
       return serverUrl && browserUrl ? data.signedUrl.replace(serverUrl, browserUrl) : data.signedUrl;
     }

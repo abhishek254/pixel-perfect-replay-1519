@@ -41,7 +41,8 @@ export const saveVideo = createServerFn({ method: 'POST' }).inputValidator(video
   const { requireAdmin } = await import('./portfolio.server'); const client = await requireAdmin();
   if (!data.video_path && !videoSource(data.video_url)) throw new Error('Use a YouTube, Vimeo, or direct MP4/WebM/MOV link.');
   for (const path of [data.video_path, data.thumbnail_path]) if (path && !/^media\/[\w.-]+$/.test(path)) throw new Error('Invalid media path.');
-  const { error } = await client.from('portfolio_videos').upsert(data);
+  const { id, ...fields } = data;
+  const { error } = await client.from('portfolio_videos').upsert({ ...fields, ...(id ? { id } : {}) });
   if (error) throw new Error('Unable to save video.'); return true;
 });
 export const deleteVideo = createServerFn({ method: 'POST' }).inputValidator(z.string().uuid()).handler(async ({ data }) => {
@@ -64,6 +65,6 @@ export const prepareUpload = createServerFn({ method: 'POST' }).inputValidator(z
   const path = `media/${crypto.randomUUID()}.${ext}`;
   const { data: upload, error } = await client.storage.from('portfolio-media').createSignedUploadUrl(path);
   if (error) throw new Error('Unable to start upload.');
-  const serverUrl = process.env['SUPABASE_URL']; const browserUrl = import.meta.env.VITE_SUPABASE_URL;
+  const serverUrl = process.env['SUPABASE_URL']; const browserUrl = import.meta.env['VITE_SUPABASE_URL'];
   return { path, url: serverUrl && browserUrl ? upload.signedUrl.replace(serverUrl, browserUrl) : upload.signedUrl };
 });
