@@ -35,7 +35,6 @@ export const TIMELINE = [
   { year: "2020", title: "Bachelors in Law", role: "MGCL, Nanachira" },
   { year: "2021", title: "LH Media", role: "Video Editor, Studio Manager" },
   { year: "2021", title: "Tesseract", role: "Director, Short Film" },
-  { year: "2022", title: "Butterfly", role: "Director, Short Film" },
   { year: "2022", title: "The Beyond Limits", role: "Motion Designer" },
   { year: "2023", title: "Rabbit Box Ads", role: "Video Editor, Motion Designer" },
   { year: "2023", title: "GOAT", role: "Feature Film Editor" },
