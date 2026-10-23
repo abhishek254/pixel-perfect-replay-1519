@@ -173,7 +173,6 @@ h1 { font-size: 80px; line-height: .99; }
 .arrow-link .circle-control { width: 52px; height: 52px; color: var(--brand-red); border-color: var(--foreground); }
 .hero-art { position: absolute; width: 52%; height: 100%; right: -40px; top: 0; }
 .hero-art img { width: 100%; height: 100%; object-fit: cover; object-position: center top; mask-image: linear-gradient(to right, transparent 0%, black 18%); }
-.hero-art-edge { position: absolute; left: 10%; top: 12%; width: 1px; height: 70%; background: var(--brand-red); transform: rotate(13deg); }
 .service-strip { background: var(--offwhite); border-block: 1px solid var(--border); }
 .service-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; overflow-x: auto; min-height: 65px; }
 .service-inner p { flex: 1 0 auto; font-size: 8px; font-weight: 600; text-transform: uppercase; padding-inline: 20px; border-left: 1px solid var(--border); text-align: center; }
