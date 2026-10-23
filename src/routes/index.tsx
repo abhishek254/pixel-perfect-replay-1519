@@ -7,8 +7,11 @@ import { Work } from "@/components/site/Work";
 import { CareerTimeline } from "@/components/site/CareerTimeline";
 import { Button } from "@/components/ui/button";
 import { CONTACT, SERVICES, STEPS } from "@/data/site";
+import { AdminFooter } from "@/components/site/AdminConsole";
+import { portfolioQuery } from "@/lib/portfolio-query";
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(portfolioQuery),
   head: () => ({ meta: [
     { title: "1.8 — Creative Partner for Growing Brands" },
     { name: "description", content: "Abhishek Hareendran helps growing brands with creative strategy, digital ads, AI-powered video production and brand storytelling." },
@@ -35,4 +38,4 @@ function HowIWork() {
 function ContactCTA() {
   return <section id="contact" className="section-space contact-section"><div className="site-container"><Reveal><p className="eyebrow"><span />Have a challenge?</p><h2>Let’s solve something<br />together<span className="text-brand-red">.</span></h2><p className="contact-description">Have a product to launch, a campaign to improve, or an idea you’re figuring out? Tell me what you’re working on. Let’s explore the problem and see what we can create together.</p><div className="contact-actions">{CONTACT.email ? <Button asChild variant="ghost" className="arrow-link"><a href={`mailto:${CONTACT.email}`}><span className="circle-control"><ArrowUpRight /></span>Let’s talk</a></Button> : <Button disabled variant="ghost" className="arrow-link" title="Contact details are being added"><span className="circle-control"><ArrowUpRight /></span>Let’s talk</Button>}{CONTACT.linkedin && <Button asChild variant="link" className="nav-link"><a href={CONTACT.linkedin} target="_blank" rel="noreferrer">Connect on LinkedIn<ArrowUpRight /></a></Button>}</div></Reveal></div></section>;
 }
-function Footer() { return <footer className="site-footer"><div className="site-container footer-inner"><a href="#top" aria-label="1.8 home"><Logo /></a><p>© {new Date().getFullYear()} 1.8 Creative Studio. Ideas in motion.</p><div className="flex gap-6">{CONTACT.email && <a href={`mailto:${CONTACT.email}`} aria-label="Email"><Mail size={16} /></a>}{CONTACT.linkedin && <a href={CONTACT.linkedin} aria-label="LinkedIn" target="_blank" rel="noreferrer"><Linkedin size={16} /></a>}</div></div><div className="pb-5 text-center"><Link to="/admin" className="text-xs text-muted-foreground hover:text-foreground">Admin Login</Link></div></footer>; }
+function Footer() { return <footer className="site-footer"><div className="site-container footer-inner"><a href="#top" aria-label="1.8 home"><Logo /></a><p>© {new Date().getFullYear()} 1.8 Creative Studio. Ideas in motion.</p><div className="flex gap-6">{CONTACT.email && <a href={`mailto:${CONTACT.email}`} aria-label="Email"><Mail size={16} /></a>}{CONTACT.linkedin && <a href={CONTACT.linkedin} aria-label="LinkedIn" target="_blank" rel="noreferrer"><Linkedin size={16} /></a>}</div></div><div className="pb-5 text-center"><AdminFooter /></div></footer>; }

@@ -14,13 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_login_attempts: {
+        Row: {
+          attempts: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          key: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      portfolio_categories: {
+        Row: {
+          id: string
+          label: string
+          position: number
+        }
+        Insert: {
+          id: string
+          label: string
+          position?: number
+        }
+        Update: {
+          id?: string
+          label?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      portfolio_videos: {
+        Row: {
+          category: string
+          description: string
+          id: string
+          position: number
+          published: boolean
+          thumbnail_path: string | null
+          title: string
+          video_path: string | null
+          video_url: string
+        }
+        Insert: {
+          category: string
+          description?: string
+          id?: string
+          position?: number
+          published?: boolean
+          thumbnail_path?: string | null
+          title: string
+          video_path?: string | null
+          video_url?: string
+        }
+        Update: {
+          category?: string
+          description?: string
+          id?: string
+          position?: number
+          published?: boolean
+          thumbnail_path?: string | null
+          title?: string
+          video_path?: string | null
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_videos_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "portfolio_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_admin_attempt: { Args: { attempt_key: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never

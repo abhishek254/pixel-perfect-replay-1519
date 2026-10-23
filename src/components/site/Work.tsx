@@ -1,44 +1,28 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CATEGORIES, PROJECTS, publicProjects, type CategoryId, type Project } from "@/data/site";
-
-export function CircleBtn({ children, label, onClick, disabled = false }: { children: ReactNode; label: string; onClick: () => void; disabled?: boolean }) {
-  return <Button variant="ghost" size="icon" aria-label={label} title={label} disabled={disabled} onClick={onClick} className="circle-control">{children}</Button>;
-}
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { ArrowLeft, ArrowRight, Play, Pause } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { portfolioQuery } from '@/lib/portfolio-query';
+import { videoSource } from '@/lib/video';
+export function CircleBtn({ children, label, onClick, disabled = false }: { children: ReactNode; label: string; onClick: () => void; disabled?: boolean }) { return <Button variant="ghost" size="icon" aria-label={label} title={label} disabled={disabled} onClick={onClick} className="circle-control">{children}</Button>; }
 export function Work() {
-  const [active, setActive] = useState<CategoryId>("all");
-  const [open, setOpen] = useState<Project | null>(null);
+  const { data } = useSuspenseQuery(portfolioQuery);
+  const [active, setActive] = useState('all'), [paused, setPaused] = useState(false), [interacting, setInteracting] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null), [open, setOpen] = useState<string | null>(null);
   const track = useRef<HTMLDivElement>(null);
-  const items = publicProjects(PROJECTS, active);
-  const label = CATEGORIES.find((c) => c.id === active)?.label ?? "All";
-  useEffect(() => { track.current?.scrollTo({ left: 0 }); }, [active]);
-  const scroll = (d: number) => { const el = track.current; if (el) el.scrollBy({ left: d * el.clientWidth * 0.8, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); };
-  return (
-    <section id="work" className="portfolio-section section-space">
-      <div className="site-container">
-        <p className="eyebrow"><span />Selected work</p>
-        <div className="work-heading">
-          <h2>Explore by<br />category<span className="text-brand-red">.</span></h2>
-          <p>A selection of work across different formats and industries.<br className="hidden lg:block" /> Each project solves a different problem, for a different audience.</p>
-          <div className="flex gap-3"><CircleBtn label="Previous projects" onClick={() => scroll(-1)} disabled={!items.length}><ArrowLeft /></CircleBtn><CircleBtn label="Next projects" onClick={() => scroll(1)} disabled={!items.length}><ArrowRight /></CircleBtn></div>
-        </div>
-        <div role="tablist" aria-label="Project categories" className="no-scrollbar category-bar">
-          {CATEGORIES.map((c) => <Button key={c.id} variant="ghost" role="tab" aria-selected={active === c.id} aria-controls="project-panel" id={`category-${c.id}`} onClick={() => setActive(c.id)} className={`category-pill ${active === c.id ? "is-active" : ""}`}>{c.label}</Button>)}
-        </div>
-        <div ref={track} id="project-panel" role="tabpanel" aria-labelledby={`category-${active}`} tabIndex={0} className="no-scrollbar project-track">
-          {items.length === 0 ? <div className="portfolio-empty"><span className="empty-line" /><p>{active === "all" ? "New work is on its way." : `${label} — new work is on its way.`}</p><span className="empty-line" /></div> : items.map((p) => <Button variant="ghost" key={p.slug} onClick={() => setOpen(p)} className="project-card group">
-            <div className="aspect-video overflow-hidden bg-muted">{p.thumbnail && <img src={p.thumbnail} alt={p.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}</div>
-            <div className="project-caption"><div><p>{CATEGORIES.find((c) => c.id === p.category)?.label}</p><h3>{p.title}</h3></div><span className="circle-control"><Play /></span></div>
-          </Button>)}
-        </div>
-      </div>
-      <Dialog open={Boolean(open)} onOpenChange={(value) => { if (!value) setOpen(null); }}><DialogContent className="max-h-[90svh] max-w-4xl overflow-y-auto">
-        <DialogTitle>{open?.title}</DialogTitle><DialogDescription>{open?.description}</DialogDescription>
-        {open?.videoUrl && <video src={open.videoUrl} controls preload="metadata" poster={open.thumbnail} className="w-full" />}
-        <dl className="grid grid-cols-3 gap-4 text-sm">{open?.role && <div><dt>Role</dt><dd>{open.role}</dd></div>}{open?.tools && <div><dt>Tools</dt><dd>{open.tools}</dd></div>}{open?.year && <div><dt>Year</dt><dd>{open.year}</dd></div>}</dl>
-      </DialogContent></Dialog>
-    </section>
-  );
+  const items = data.videos.filter(p => p.published && (active === 'all' || p.category === active));
+  const categories = [{ id: 'all', label: 'All' }, ...data.categories];
+  const label = categories.find(c => c.id === active)?.label || 'All';
+  const current = data.videos.find(p => p.id === open), description = items.find(p => p.id === selected);
+  const source = current ? videoSource(current.videoUrl) : null;
+  useEffect(() => { track.current?.scrollTo({ left: 0 }); setSelected(null); }, [active]);
+  useEffect(() => {
+    const el = track.current; if (!el || paused || interacting || open || !items.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let frame = 0, last = 0, position = el.scrollLeft;
+    const step = (time: number) => { if (last) { position += Math.min(time - last, 50) * 0.014; const max = el.scrollWidth - el.clientWidth; if (max > 0) { if (position >= max) position = 0; el.scrollLeft = position; } } last = time; frame = requestAnimationFrame(step); };
+    frame = requestAnimationFrame(step); return () => cancelAnimationFrame(frame);
+  }, [paused, interacting, open, active, items.length]);
+  const scroll = (direction: number) => { setPaused(true); track.current?.scrollBy({ left: direction * 340, behavior: 'smooth' }); };
+  return <section id="work" className="portfolio-section section-space"><div className="site-container"><p className="eyebrow"><span />Selected work</p><div className="work-heading"><h2>Explore by<br />category<span className="text-brand-red">.</span></h2><p>A selection of work across different formats and industries.<br className="hidden lg:block" /> Each project solves a different problem, for a different audience.</p><div className="flex gap-3"><CircleBtn label="Previous projects" onClick={() => scroll(-1)} disabled={!items.length}><ArrowLeft /></CircleBtn><CircleBtn label={paused ? 'Resume carousel' : 'Pause carousel'} onClick={() => setPaused(!paused)} disabled={!items.length}>{paused ? <Play /> : <Pause />}</CircleBtn><CircleBtn label="Next projects" onClick={() => scroll(1)} disabled={!items.length}><ArrowRight /></CircleBtn></div></div><div role="tablist" aria-label="Project categories" className="no-scrollbar category-bar">{categories.map(c => <Button key={c.id} variant="ghost" role="tab" aria-selected={active === c.id} aria-controls="project-panel" id={`category-${c.id}`} onClick={() => setActive(c.id)} className={`category-pill ${active === c.id ? 'is-active' : ''}`}>{c.label}</Button>)}</div><div ref={track} id="project-panel" role="tabpanel" aria-labelledby={`category-${active}`} tabIndex={0} className="no-scrollbar project-track" onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setInteracting(false); }} onTouchStart={() => setPaused(true)}>{!items.length ? <div className="portfolio-empty"><span className="empty-line" /><p>{active === 'all' ? 'New work is on its way.' : `${label} — new work is on its way.`}</p><span className="empty-line" /></div> : items.map(p => { const media = videoSource(p.videoUrl); return <Button variant="ghost" key={p.id} className="project-card group" onMouseEnter={() => setSelected(p.id)} onFocus={() => setSelected(p.id)} onClick={() => { setSelected(p.id); setOpen(p.id); }} aria-label={`Play ${p.title}`}><div className="project-preview">{p.thumbnail ? <img src={p.thumbnail} alt="" loading="lazy" /> : media?.kind === 'video' ? <video src={media.url} muted playsInline preload="metadata" /> : <div className="video-placeholder"><Play size={32} /></div>}<span className="preview-play"><Play /></span></div><div className="project-caption"><div><p>{categories.find(c => c.id === p.category)?.label}</p><h3>{p.title}</h3></div></div></Button>; })}</div>{items.length > 0 && <div className="work-description" aria-live="polite">{description && <><h3>{description.title}</h3><p>{description.description}</p></>}</div>}</div><Dialog open={Boolean(open)} onOpenChange={v => { if (!v) setOpen(null); }}><DialogContent className="max-h-[90svh] max-w-4xl overflow-y-auto"><DialogTitle>{current?.title}</DialogTitle><DialogDescription>{current?.description || '1.8 selected work'}</DialogDescription>{source?.kind === 'video' && <video src={source.url} controls autoPlay playsInline poster={current?.thumbnail} className="aspect-video w-full" />}{source?.kind === 'embed' && <iframe src={source.url} title={current?.title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="aspect-video w-full border-0" />}</DialogContent></Dialog></section>;
 }

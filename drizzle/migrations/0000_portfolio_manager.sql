@@ -1,0 +1,16 @@
+CREATE TABLE public.portfolio_categories (id text PRIMARY KEY, label text NOT NULL, position integer NOT NULL DEFAULT 0);
+GRANT SELECT ON public.portfolio_categories TO anon, authenticated;
+GRANT ALL ON public.portfolio_categories TO service_role;
+ALTER TABLE public.portfolio_categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public categories" ON public.portfolio_categories FOR SELECT TO anon, authenticated USING (true);
+CREATE TABLE public.portfolio_videos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), title text NOT NULL, description text NOT NULL DEFAULT '', category text NOT NULL REFERENCES public.portfolio_categories(id), video_url text NOT NULL DEFAULT '', video_path text, thumbnail_path text, published boolean NOT NULL DEFAULT false, position integer NOT NULL DEFAULT 0);
+GRANT SELECT ON public.portfolio_videos TO anon, authenticated;
+GRANT ALL ON public.portfolio_videos TO service_role;
+ALTER TABLE public.portfolio_videos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Published videos only" ON public.portfolio_videos FOR SELECT TO anon, authenticated USING (published);
+CREATE TABLE public.admin_login_attempts (key text PRIMARY KEY, attempts integer NOT NULL DEFAULT 0, window_start timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.admin_login_attempts TO service_role;
+ALTER TABLE public.admin_login_attempts ENABLE ROW LEVEL SECURITY;
+CREATE FUNCTION public.record_admin_attempt(attempt_key text) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ DECLARE n integer; BEGIN INSERT INTO public.admin_login_attempts(key) VALUES (attempt_key) ON CONFLICT (key) DO UPDATE SET attempts = CASE WHEN admin_login_attempts.window_start < now() - interval '15 minutes' THEN 1 ELSE admin_login_attempts.attempts + 1 END, window_start = CASE WHEN admin_login_attempts.window_start < now() - interval '15 minutes' THEN now() ELSE admin_login_attempts.window_start END RETURNING attempts INTO n; RETURN n; END; $$;
+REVOKE ALL ON FUNCTION public.record_admin_attempt(text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_admin_attempt(text) TO service_role;

@@ -10,10 +10,10 @@ export const CATEGORIES = [
   { id: "social-media", label: "Social Media" },
   { id: "concepts", label: "Concepts" },
 ] as const;
-export type CategoryId = (typeof CATEGORIES)[number]["id"];
+export type CategoryId = string;
 export type Project = {
   slug: string; title: string; description: string;
-  category: Exclude<CategoryId, "all">;
+  category: string;
   published: boolean;
   year?: string; role?: string; tools?: string; thumbnail?: string; videoUrl?: string;
 };
